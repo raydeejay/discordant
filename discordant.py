@@ -32,7 +32,7 @@ def on_message(message):
             reload(bot)
 
         elif command in bot.commands:
-            print('Dispatching {}'.format(command))
+            print('Dispatching {} from {}'.format(command, message.author))
             yield from bot.commands[command](client, message, args)
 
 
