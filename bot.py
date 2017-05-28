@@ -106,18 +106,23 @@ def wrong(client, message, args):
 
 # message management
 @asyncio.coroutine
-def pack(client, message, args):
+def get_candidates(client, channel, author, args):
     try:
         count = int(args[0])
     except:
-        return
+        count = None
 
-    candidates = yield from client.logs_from(message.channel, limit=100)
+    candidates = yield from client.logs_from(channel, limit=100)
     msgs = []
     for msg in candidates:
-        if msg.author == message.author:
+        if msg.author == author:
             msgs.append(msg)
+    return count, msgs
 
+
+@asyncio.coroutine
+def pack(client, message, args):
+    count, msgs = yield from get_candidates(client, message.channel, message.author, args)
     newLines = []
 
     for msg in msgs[1:count]:
@@ -134,17 +139,7 @@ def pack(client, message, args):
 
 @asyncio.coroutine
 def pull(client, message, args):
-    try:
-        count = int(args[0])
-    except:
-        return
-
-    candidates = yield from client.logs_from(message.channel, limit=100)
-    msgs = []
-    for msg in candidates:
-        if msg.author == message.author:
-            msgs.append(msg)
-
+    count, msgs = yield from get_candidates(client, message.channel, message.author, args)
     newLines = [msgs[1].content]
 
     for msg in msgs[2:count + 1]:
@@ -158,17 +153,7 @@ def pull(client, message, args):
 
 @asyncio.coroutine
 def prune(client, message, args):
-    try:
-        count = int(args[0])
-    except:
-        return
-
-    candidates = yield from client.logs_from(message.channel, limit=100)
-    msgs = []
-    for msg in candidates:
-        if msg.author == message.author:
-            msgs.append(msg)
-
+    count, msgs = yield from get_candidates(client, message.channel, message.author, args)
     for msg in msgs[:count + 1]:
         yield from client.delete_message(msg)
 
