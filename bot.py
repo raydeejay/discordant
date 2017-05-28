@@ -33,24 +33,46 @@ emojis = {
 }
 
 
-# functions
-@asyncio.coroutine
-def sub(client, message, args):
-    role = find(lambda r: r.name == 'sub-{}'.format(args[0]), message.server.roles)
-    yield from client.delete_message(message)
-    yield from client.add_roles(message.author, role)
-
-@asyncio.coroutine
-def unsub(client, message, args):
-    role = find(lambda r: r.name == 'sub-{}'.format(args[0]), message.server.roles)
-    yield from client.delete_message(message)
-    yield from client.remove_roles(message.author, role)
-
+# the mandatory `moo` command
 @asyncio.coroutine
 def moo(client, message, args):
     yield from client.delete_message(message)
     yield from client.send_message(message.channel, 'moo')
 
+
+# general bot commands
+@asyncio.coroutine
+def helpx(client, message, args):
+    yield from client.delete_message(message)
+    yield from client.send_message(message.channel, '**Available commands**:\n```{}```'.format(', '.join(commands)))
+
+
+# channel subscriptions
+def get_sub_role(name, server):
+    return find(lambda r: r.name == 'sub-{}'.format(name), server.roles)
+
+@asyncio.coroutine
+def subs(client, message, args):
+    roles = [role.name[4:] for role in message.server.roles if role.name.startswith('sub-')]
+    yield from client.delete_message(message)
+    yield from client.send_message(message.channel, '**Available subscriptions**:\n```{}```'.format(', '.join(roles)))
+
+@asyncio.coroutine
+def sub(client, message, args):
+    role = get_sub_role(args[0], message.server)
+    yield from client.delete_message(message)
+    if role:
+        yield from client.add_roles(message.author, role)
+
+@asyncio.coroutine
+def unsub(client, message, args):
+    role = get_sub_role(args[0], message.server)
+    yield from client.delete_message(message)
+    if role:
+        yield from client.remove_roles(message.author, role)
+
+
+# image posting commands
 @asyncio.coroutine
 def proc(client, message, args):
     yield from client.delete_message(message)
@@ -61,6 +83,8 @@ def point(client, message, args):
     yield from client.delete_message(message)
     yield from client.send_file(message.channel, 'images/point.png')
 
+
+# meme-like commands
 @asyncio.coroutine
 def pins(client, message, args):
     chan = discord.utils.get(message.server.channels, name='help')
@@ -79,6 +103,8 @@ def wrong(client, message, args):
     yield from client.delete_message(message)
     yield from client.send_message(message.channel, '```{}: You\'re doing it completely wrong.```'.format(' '.join(args).upper()))
 
+
+# message management
 @asyncio.coroutine
 def pack(client, message, args):
     try:
@@ -127,11 +153,8 @@ def pull(client, message, args):
 
     newLines.reverse()
 
-    # print(newLines)
-
     yield from client.delete_message(msgs[0])
     yield from client.edit_message(msgs[1], '\n'.join(newLines))
-
 
 @asyncio.coroutine
 def prune(client, message, args):
@@ -148,7 +171,6 @@ def prune(client, message, args):
 
     for msg in msgs[:count + 1]:
         yield from client.delete_message(msg)
-
 
 @asyncio.coroutine
 def react(client, message, args):
@@ -180,18 +202,6 @@ def react(client, message, args):
                         yield from client.add_reaction(msg, emoji)
         else:
             yield from client.add_reaction(msg, piece)
-
-@asyncio.coroutine
-def subs(client, message, args):
-    roles = [role.name[4:] for role in message.server.roles if role.name.startswith('sub-')]
-    yield from client.delete_message(message)
-    yield from client.send_message(message.channel, '**Available subscriptions**:\n```{}```'.format(', '.join(roles)))
-
-
-@asyncio.coroutine
-def helpx(client, message, args):
-    yield from client.delete_message(message)
-    yield from client.send_message(message.channel, '**Available commands**:\n```{}```'.format(', '.join(commands)))
 
 
 # commands
