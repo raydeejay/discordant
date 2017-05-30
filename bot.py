@@ -119,41 +119,35 @@ def get_candidates(client, channel, author, args):
             msgs.append(msg)
     return count, msgs
 
+@asyncio.coroutine
+def delete_messages(client, messages, cmdMessage=None):
+    if cmdMessage:
+        yield from client.delete_message(cmdMessage)
+
+    for msg in messages:
+        yield from client.delete_message(msg)
 
 @asyncio.coroutine
 def pack(client, message, args):
     count, msgs = yield from get_candidates(client, message.channel, message.author, args)
-    newLines = []
 
-    for msg in msgs[1:count]:
-        newLines.append(msg.content)
-        yield from client.delete_message(msg)
-
-    newLines.append(msgs[count].content)
-    newLines.reverse()
-
-    print(newLines)
-
-    yield from client.delete_message(msgs[0])
+    newLines = [msg.content for msg in msgs[count:0:-1]]
+    yield from delete_messages(client, msgs[1:count], msgs[0])
     yield from client.edit_message(msgs[count], '\n'.join(newLines))
 
 @asyncio.coroutine
 def pull(client, message, args):
     count, msgs = yield from get_candidates(client, message.channel, message.author, args)
-    newLines = [msgs[1].content]
 
-    for msg in msgs[2:count + 1]:
-        newLines.append(msg.content)
-        yield from client.delete_message(msg)
-
-    newLines.reverse()
-
-    yield from client.delete_message(msgs[0])
+    newLines = [msg.content for msg in msgs[count:0:-1]]
+    yield from delete_messages(client, msgs[2:count + 1], msgs[0])
     yield from client.edit_message(msgs[1], '\n'.join(newLines))
 
 @asyncio.coroutine
 def prune(client, message, args):
     count, msgs = yield from get_candidates(client, message.channel, message.author, args)
+
+    yield from delete_messages(client, msgs[:count + 1])
     for msg in msgs[:count + 1]:
         yield from client.delete_message(msg)
 
