@@ -113,10 +113,8 @@ def get_candidates(client, channel, author, args):
         count = None
 
     candidates = yield from client.logs_from(channel, limit=100)
-    msgs = []
-    for msg in candidates:
-        if msg.author == author:
-            msgs.append(msg)
+    msgs = [msg for msg in candidates if msg.author == author]
+
     return count, msgs
 
 @asyncio.coroutine
